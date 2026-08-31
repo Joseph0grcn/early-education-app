@@ -91,9 +91,15 @@ export default function ActivityPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col items-center justify-center gap-7 py-8">
+        <div
+          className={`flex flex-1 flex-col items-center justify-center ${
+            isLetterObjectGame ? 'gap-3 py-3 sm:gap-5 sm:py-6' : 'gap-7 py-8'
+          }`}
+        >
           <motion.div
-            className={`flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br ${activity.colors} shadow-soft ring-4 ${activity.ring}`}
+            className={`items-center justify-center rounded-[2rem] bg-gradient-to-br ${activity.colors} shadow-soft ring-4 ${activity.ring} ${
+              isLetterObjectGame ? 'hidden h-20 w-20 sm:flex' : 'flex h-24 w-24'
+            }`}
             initial={{ scale: 0.7, rotate: -8, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 170, damping: 14 }}
@@ -102,7 +108,9 @@ export default function ActivityPage() {
           </motion.div>
 
           <motion.h1
-            className="text-center font-rounded text-4xl font-black leading-tight text-slate-800 sm:text-6xl"
+            className={`text-center font-rounded font-black leading-tight text-slate-800 ${
+              isLetterObjectGame ? 'text-2xl sm:text-5xl' : 'text-4xl sm:text-6xl'
+            }`}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -112,14 +120,14 @@ export default function ActivityPage() {
           <div
             ref={targetRef}
             className={`flex w-full max-w-xl flex-wrap items-center justify-center gap-3 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:gap-4 ${
-              isLetterObjectGame ? 'min-h-44 sm:min-h-52' : 'min-h-32 sm:min-h-40'
+              isLetterObjectGame ? 'min-h-28 p-3 sm:min-h-48 sm:p-5' : 'min-h-32 sm:min-h-40'
             }`}
           >
             {question.visual.map((item, index) => (
               <motion.span
                 key={`${item}-${index}`}
                 className={`font-rounded font-black text-sky-700 ${
-                  isLetterObjectGame ? 'text-9xl sm:text-[10rem]' : 'text-5xl sm:text-7xl'
+                  isLetterObjectGame ? 'text-7xl sm:text-[10rem]' : 'text-5xl sm:text-7xl'
                 }`}
                 animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
                 transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.18 }}
@@ -130,7 +138,7 @@ export default function ActivityPage() {
           </div>
 
           {isLetterObjectGame ? (
-            <div className="grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
+            <div className="grid w-full max-w-3xl grid-cols-3 gap-2 sm:gap-5">
               {question.choices.map((choice) => (
                 <LetterObjectChoice
                   key={choice.id}
@@ -172,7 +180,9 @@ export default function ActivityPage() {
 
           <motion.button
             type="button"
-            className="flex min-h-14 items-center gap-2 rounded-full bg-white px-5 font-rounded text-xl font-black text-slate-700 shadow-soft ring-4 ring-white"
+            className={`min-h-14 items-center gap-2 rounded-full bg-white px-5 font-rounded text-xl font-black text-slate-700 shadow-soft ring-4 ring-white ${
+              isLetterObjectGame ? 'hidden sm:flex' : 'flex'
+            }`}
             whileTap={{ scale: 0.9 }}
             whileHover={{ scale: 1.04 }}
             onClick={() => {
