@@ -17,17 +17,22 @@ export const activities = {
   harfler: {
     path: '/harfler',
     title: 'Harfler',
-    question: 'Bu harfi bul!',
-    type: 'letter-match',
-    letters: [
-      { upper: 'A', lower: 'a' },
-      { upper: 'E', lower: 'e' },
-      { upper: 'K', lower: 'k' },
-      { upper: 'M', lower: 'm' },
-      { upper: 'O', lower: 'o' },
-      { upper: 'S', lower: 's' },
-      { upper: 'T', lower: 't' },
-      { upper: 'Y', lower: 'y' },
+    question: 'Bu harfle başlayan hangisi?',
+    type: 'letter-object',
+    letters: ['A', 'B', 'E', 'K', 'M', 'T'],
+    objects: [
+      { id: 'araba', name: 'Araba', emoji: '🚗', startsWith: 'A' },
+      { id: 'ari', name: 'Arı', emoji: '🐝', startsWith: 'A' },
+      { id: 'balon', name: 'Balon', emoji: '🎈', startsWith: 'B' },
+      { id: 'balik', name: 'Balık', emoji: '🐟', startsWith: 'B' },
+      { id: 'elma', name: 'Elma', emoji: '🍎', startsWith: 'E' },
+      { id: 'ev', name: 'Ev', emoji: '🏠', startsWith: 'E' },
+      { id: 'kedi', name: 'Kedi', emoji: '🐱', startsWith: 'K' },
+      { id: 'kalp', name: 'Kalp', emoji: '❤️', startsWith: 'K' },
+      { id: 'muz', name: 'Muz', emoji: '🍌', startsWith: 'M' },
+      { id: 'makas', name: 'Makas', emoji: '✂️', startsWith: 'M' },
+      { id: 'top', name: 'Top', emoji: '⚽', startsWith: 'T' },
+      { id: 'tavsan', name: 'Tavşan', emoji: '🐰', startsWith: 'T' },
     ],
     icon: PencilLine,
     colors: 'from-amber-300 to-yellow-200',
@@ -89,18 +94,19 @@ export const createCountingQuestion = (activity, previousQuestion) => {
   };
 };
 
-export const createLetterQuestion = (activity, previousQuestion) => {
-  const availableLetters = activity.letters.filter((letter) => letter.upper !== previousQuestion?.answer);
-  const target = shuffle(availableLetters.length > 0 ? availableLetters : activity.letters)[0];
-  const distractors = shuffle(activity.letters.filter((letter) => letter.upper !== target.upper))
-    .slice(0, 2)
-    .map((letter) => letter.upper);
+export const createLetterObjectQuestion = (activity, previousQuestion) => {
+  const availableLetters = activity.letters.filter((letter) => letter !== previousQuestion?.letter);
+  const letter = shuffle(availableLetters.length > 0 ? availableLetters : activity.letters)[0];
+  const correctObject = shuffle(activity.objects.filter((item) => item.startsWith === letter))[0];
+  const distractors = shuffle(activity.objects.filter((item) => item.startsWith !== letter)).slice(0, 2);
 
   return {
     question: activity.question,
-    answer: target.upper,
-    choices: shuffle([target.upper, ...distractors]),
-    visual: [target.upper, target.lower],
+    answer: correctObject.id,
+    choices: shuffle([correctObject, ...distractors]),
+    letter,
+    visual: [letter],
+    variant: 'letter-object',
   };
 };
 
@@ -109,8 +115,8 @@ export const createActivityQuestion = (activity, previousQuestion) => {
     return createCountingQuestion(activity, previousQuestion);
   }
 
-  if (activity.type === 'letter-match') {
-    return createLetterQuestion(activity, previousQuestion);
+  if (activity.type === 'letter-object') {
+    return createLetterObjectQuestion(activity, previousQuestion);
   }
 
   return {

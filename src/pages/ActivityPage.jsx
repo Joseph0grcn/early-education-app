@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Home as HomeIcon, RotateCcw, Star, X } from 'lucide-r
 import { Link, Navigate, useParams } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav.jsx';
 import StarBurst from '../components/feedback/StarBurst.jsx';
+import LetterObjectChoice from '../components/letters/LetterObjectChoice.jsx';
 import ChoiceButton from '../components/ui/ChoiceButton.jsx';
 import { activities, activityList, createActivityQuestion } from '../data/activities.js';
 import { useSound } from '../hooks/useSound.js';
@@ -17,6 +18,7 @@ export default function ActivityPage() {
   const addStar = useAppStore((state) => state.addStar);
   const nextQuestionTimer = useRef(null);
   const burstTimer = useRef(null);
+  const targetRef = useRef(null);
   const [question, setQuestion] = useState(() => (activity ? createActivityQuestion(activity) : null));
   const [selected, setSelected] = useState(null);
   const [showBurst, setShowBurst] = useState(false);
@@ -41,6 +43,7 @@ export default function ActivityPage() {
   }
 
   const isCorrect = selected === question.answer;
+  const isLetterObjectGame = question.variant === 'letter-object';
 
   const handleChoice = (choice) => {
     if (isCorrect) {
@@ -61,7 +64,9 @@ export default function ActivityPage() {
       return;
     }
 
-    play('oops');
+    if (!isLetterObjectGame) {
+      play('oops');
+    }
   };
 
   return (
@@ -104,11 +109,18 @@ export default function ActivityPage() {
             {question.question}
           </motion.h1>
 
-          <div className="flex min-h-32 w-full max-w-xl flex-wrap items-center justify-center gap-3 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:min-h-40 sm:gap-4">
+          <div
+            ref={targetRef}
+            className={`flex w-full max-w-xl flex-wrap items-center justify-center gap-3 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:gap-4 ${
+              isLetterObjectGame ? 'min-h-44 sm:min-h-52' : 'min-h-32 sm:min-h-40'
+            }`}
+          >
             {question.visual.map((item, index) => (
               <motion.span
                 key={`${item}-${index}`}
-                className="font-rounded text-5xl font-black text-sky-700 sm:text-7xl"
+                className={`font-rounded font-black text-sky-700 ${
+                  isLetterObjectGame ? 'text-9xl sm:text-[10rem]' : 'text-5xl sm:text-7xl'
+                }`}
                 animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
                 transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.18 }}
               >
@@ -117,20 +129,35 @@ export default function ActivityPage() {
             ))}
           </div>
 
-          <div className="grid w-full max-w-2xl grid-cols-3 gap-3 sm:gap-5">
-            {question.choices.map((choice) => (
-              <ChoiceButton
-                key={choice}
-                selected={selected === choice}
-                correct={choice === question.answer}
-                onClick={() => handleChoice(choice)}
-              >
-                {choice}
-              </ChoiceButton>
-            ))}
-          </div>
+          {isLetterObjectGame ? (
+            <div className="grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
+              {question.choices.map((choice) => (
+                <LetterObjectChoice
+                  key={choice.id}
+                  object={choice}
+                  isWrong={selected === choice.id && !isCorrect}
+                  isCorrect={selected === choice.id && isCorrect}
+                  dropTargetRef={targetRef}
+                  onSelect={() => handleChoice(choice.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid w-full max-w-2xl grid-cols-3 gap-3 sm:gap-5">
+              {question.choices.map((choice) => (
+                <ChoiceButton
+                  key={choice}
+                  selected={selected === choice}
+                  correct={choice === question.answer}
+                  onClick={() => handleChoice(choice)}
+                >
+                  {choice}
+                </ChoiceButton>
+              ))}
+            </div>
+          )}
 
-          {selected && (
+          {selected && (!isLetterObjectGame || isCorrect) && (
             <motion.div
               className={`flex min-h-16 items-center gap-3 rounded-full px-6 font-rounded text-2xl font-black shadow-soft ${
                 isCorrect ? 'bg-emerald-300 text-emerald-950' : 'bg-rose-200 text-rose-950'
