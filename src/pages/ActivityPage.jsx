@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Home as HomeIcon, RotateCcw, Star, X } from 'lucide-react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import BottomNav from '../components/layout/BottomNav.jsx';
 import StarBurst from '../components/feedback/StarBurst.jsx';
 import ChoiceButton from '../components/ui/ChoiceButton.jsx';
-import { activities, activityList } from '../data/activities.js';
+import { activities, activityList, createActivityQuestion } from '../data/activities.js';
 import { useSound } from '../hooks/useSound.js';
 import { useAppStore } from '../store/useAppStore.js';
 
@@ -15,28 +15,49 @@ export default function ActivityPage() {
   const { play } = useSound();
   const stars = useAppStore((state) => state.stars);
   const addStar = useAppStore((state) => state.addStar);
+  const nextQuestionTimer = useRef(null);
+  const burstTimer = useRef(null);
+  const [question, setQuestion] = useState(() => (activity ? createActivityQuestion(activity) : null));
   const [selected, setSelected] = useState(null);
   const [showBurst, setShowBurst] = useState(false);
 
   useEffect(() => {
+    window.clearTimeout(nextQuestionTimer.current);
+    window.clearTimeout(burstTimer.current);
+    setQuestion(activity ? createActivityQuestion(activity) : null);
     setSelected(null);
     setShowBurst(false);
-  }, [slug]);
+  }, [activity, slug]);
 
-  if (!activity) {
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(nextQuestionTimer.current);
+      window.clearTimeout(burstTimer.current);
+    };
+  }, []);
+
+  if (!activity || !question) {
     return <Navigate to="/" replace />;
   }
 
-  const isCorrect = selected === activity.answer;
+  const isCorrect = selected === question.answer;
 
   const handleChoice = (choice) => {
+    if (isCorrect) {
+      return;
+    }
+
     setSelected(choice);
 
-    if (choice === activity.answer) {
+    if (choice === question.answer) {
       addStar();
       setShowBurst(true);
       play('success');
-      window.setTimeout(() => setShowBurst(false), 1000);
+      burstTimer.current = window.setTimeout(() => setShowBurst(false), 1000);
+      nextQuestionTimer.current = window.setTimeout(() => {
+        setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion?.answer));
+        setSelected(null);
+      }, 1400);
       return;
     }
 
@@ -80,11 +101,11 @@ export default function ActivityPage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            {activity.question}
+            {question.question}
           </motion.h1>
 
           <div className="flex min-h-32 w-full max-w-xl items-center justify-center gap-4 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:min-h-40">
-            {activity.visual.map((item, index) => (
+            {question.visual.map((item, index) => (
               <motion.span
                 key={`${item}-${index}`}
                 className="font-rounded text-6xl font-black text-sky-700 sm:text-7xl"
@@ -97,11 +118,11 @@ export default function ActivityPage() {
           </div>
 
           <div className="grid w-full max-w-2xl grid-cols-3 gap-3 sm:gap-5">
-            {activity.choices.map((choice) => (
+            {question.choices.map((choice) => (
               <ChoiceButton
                 key={choice}
                 selected={selected === choice}
-                correct={choice === activity.answer}
+                correct={choice === question.answer}
                 onClick={() => handleChoice(choice)}
               >
                 {choice}
@@ -127,7 +148,13 @@ export default function ActivityPage() {
             className="flex min-h-14 items-center gap-2 rounded-full bg-white px-5 font-rounded text-xl font-black text-slate-700 shadow-soft ring-4 ring-white"
             whileTap={{ scale: 0.9 }}
             whileHover={{ scale: 1.04 }}
-            onClick={() => setSelected(null)}
+            onClick={() => {
+              window.clearTimeout(nextQuestionTimer.current);
+              window.clearTimeout(burstTimer.current);
+              setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion?.answer));
+              setSelected(null);
+              setShowBurst(false);
+            }}
           >
             <RotateCcw className="h-6 w-6" strokeWidth={3.2} />
             Yenile
