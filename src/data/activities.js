@@ -4,9 +4,9 @@ export const activities = {
   sayilar: {
     path: '/sayilar',
     title: 'Sayılar',
-    question: 'Kaç * var?',
+    questionTemplate: 'Kaç {symbol} var?',
     type: 'counting',
-    symbol: '*',
+    countItems: ['⭐', '🍎', '🎈', '❤️', '🌼', '🧸'],
     min: 1,
     max: 6,
     icon: Hash,
@@ -46,11 +46,17 @@ const shuffle = (items) => [...items].sort(() => Math.random() - 0.5);
 
 const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-export const createCountingQuestion = (activity, previousAnswer) => {
+const pickCountingSymbol = (items, previousSymbol) => {
+  const availableItems = items.filter((item) => item !== previousSymbol);
+  return shuffle(availableItems.length > 0 ? availableItems : items)[0];
+};
+
+export const createCountingQuestion = (activity, previousQuestion) => {
+  const symbol = pickCountingSymbol(activity.countItems, previousQuestion?.symbol);
   let answer = randomBetween(activity.min, activity.max);
 
   if (activity.max > activity.min) {
-    while (String(answer) === String(previousAnswer)) {
+    while (String(answer) === String(previousQuestion?.answer)) {
       answer = randomBetween(activity.min, activity.max);
     }
   }
@@ -67,16 +73,17 @@ export const createCountingQuestion = (activity, previousAnswer) => {
   }
 
   return {
-    question: activity.question,
+    question: activity.questionTemplate.replace('{symbol}', symbol),
     answer: String(answer),
     choices: shuffle(choices),
-    visual: Array.from({ length: answer }, () => activity.symbol),
+    symbol,
+    visual: Array.from({ length: answer }, () => symbol),
   };
 };
 
-export const createActivityQuestion = (activity, previousAnswer) => {
+export const createActivityQuestion = (activity, previousQuestion) => {
   if (activity.type === 'counting') {
-    return createCountingQuestion(activity, previousAnswer);
+    return createCountingQuestion(activity, previousQuestion);
   }
 
   return {

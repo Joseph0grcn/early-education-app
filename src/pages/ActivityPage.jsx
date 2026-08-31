@@ -55,7 +55,7 @@ export default function ActivityPage() {
       play('success');
       burstTimer.current = window.setTimeout(() => setShowBurst(false), 1000);
       nextQuestionTimer.current = window.setTimeout(() => {
-        setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion?.answer));
+        setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion));
         setSelected(null);
       }, 1400);
       return;
@@ -104,11 +104,11 @@ export default function ActivityPage() {
             {question.question}
           </motion.h1>
 
-          <div className="flex min-h-32 w-full max-w-xl items-center justify-center gap-4 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:min-h-40">
+          <div className="flex min-h-32 w-full max-w-xl flex-wrap items-center justify-center gap-3 rounded-[2rem] bg-white/75 p-5 shadow-soft ring-4 ring-white sm:min-h-40 sm:gap-4">
             {question.visual.map((item, index) => (
               <motion.span
                 key={`${item}-${index}`}
-                className="font-rounded text-6xl font-black text-sky-700 sm:text-7xl"
+                className="font-rounded text-5xl font-black text-sky-700 sm:text-7xl"
                 animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
                 transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.18 }}
               >
@@ -151,7 +151,7 @@ export default function ActivityPage() {
             onClick={() => {
               window.clearTimeout(nextQuestionTimer.current);
               window.clearTimeout(burstTimer.current);
-              setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion?.answer));
+              setQuestion((currentQuestion) => createActivityQuestion(activity, currentQuestion));
               setSelected(null);
               setShowBurst(false);
             }}
