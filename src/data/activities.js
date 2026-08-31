@@ -17,14 +17,22 @@ export const activities = {
   harfler: {
     path: '/harfler',
     title: 'Harfler',
-    question: 'A harfi hangisi?',
-    answer: 'A',
+    question: 'Bu harfi bul!',
+    type: 'letter-match',
+    letters: [
+      { upper: 'A', lower: 'a' },
+      { upper: 'E', lower: 'e' },
+      { upper: 'K', lower: 'k' },
+      { upper: 'M', lower: 'm' },
+      { upper: 'O', lower: 'o' },
+      { upper: 'S', lower: 's' },
+      { upper: 'T', lower: 't' },
+      { upper: 'Y', lower: 'y' },
+    ],
     icon: PencilLine,
     colors: 'from-amber-300 to-yellow-200',
     ring: 'ring-amber-200',
     background: 'from-amber-100 via-yellow-50 to-rose-50',
-    choices: ['A', 'E', 'M'],
-    visual: ['A', 'a'],
   },
   oyunlar: {
     path: '/oyunlar',
@@ -81,9 +89,28 @@ export const createCountingQuestion = (activity, previousQuestion) => {
   };
 };
 
+export const createLetterQuestion = (activity, previousQuestion) => {
+  const availableLetters = activity.letters.filter((letter) => letter.upper !== previousQuestion?.answer);
+  const target = shuffle(availableLetters.length > 0 ? availableLetters : activity.letters)[0];
+  const distractors = shuffle(activity.letters.filter((letter) => letter.upper !== target.upper))
+    .slice(0, 2)
+    .map((letter) => letter.upper);
+
+  return {
+    question: activity.question,
+    answer: target.upper,
+    choices: shuffle([target.upper, ...distractors]),
+    visual: [target.upper, target.lower],
+  };
+};
+
 export const createActivityQuestion = (activity, previousQuestion) => {
   if (activity.type === 'counting') {
     return createCountingQuestion(activity, previousQuestion);
+  }
+
+  if (activity.type === 'letter-match') {
+    return createLetterQuestion(activity, previousQuestion);
   }
 
   return {
