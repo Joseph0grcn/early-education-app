@@ -123,18 +123,49 @@ export default function ActivityPage() {
               isLetterObjectGame ? 'min-h-28 p-3 sm:min-h-48 sm:p-5' : 'min-h-32 sm:min-h-40'
             }`}
           >
-            {question.visual.map((item, index) => (
-              <motion.span
-                key={`${item}-${index}`}
-                className={`font-rounded font-black text-sky-700 ${
-                  isLetterObjectGame ? 'text-7xl sm:text-[10rem]' : 'text-5xl sm:text-7xl'
-                }`}
-                animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
-                transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.18 }}
-              >
-                {item}
-              </motion.span>
-            ))}
+            {question.visualGroups ? (
+              question.visualGroups.map((group, groupIndex) =>
+                group.operator ? (
+                  <span
+                    key={`operator-${groupIndex}`}
+                    className="font-rounded text-5xl font-black text-slate-700 sm:text-7xl"
+                  >
+                    {group.operator}
+                  </span>
+                ) : (
+                  <span
+                    key={`group-${groupIndex}`}
+                    className={`flex max-w-40 flex-wrap items-center justify-center gap-1 sm:max-w-64 sm:gap-2 ${
+                      group.muted ? 'opacity-35 grayscale' : ''
+                    }`}
+                  >
+                    {group.items.map((item, index) => (
+                      <motion.span
+                        key={`${item}-${groupIndex}-${index}`}
+                        className="text-4xl sm:text-6xl"
+                        animate={{ y: [0, -6, 0], rotate: [0, 3, 0] }}
+                        transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.12 }}
+                      >
+                        {item}
+                      </motion.span>
+                    ))}
+                  </span>
+                ),
+              )
+            ) : (
+              question.visual.map((item, index) => (
+                <motion.span
+                  key={`${item}-${index}`}
+                  className={`font-rounded font-black text-sky-700 ${
+                    isLetterObjectGame ? 'text-7xl sm:text-[10rem]' : 'text-5xl sm:text-7xl'
+                  }`}
+                  animate={{ y: [0, -8, 0], rotate: [0, 3, 0] }}
+                  transition={{ duration: 2.2, repeat: Infinity, delay: index * 0.18 }}
+                >
+                  {item}
+                </motion.span>
+              ))
+            )}
           </div>
 
           {isLetterObjectGame ? (

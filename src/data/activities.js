@@ -5,10 +5,13 @@ export const activities = {
     path: '/sayilar',
     title: 'Sayılar',
     questionTemplate: 'Kaç {symbol} var?',
-    type: 'counting',
+    additionTemplate: 'Kaç {symbol} oldu?',
+    subtractionTemplate: 'Kaç {symbol} kaldı?',
+    type: 'numbers',
+    numberModes: ['counting', 'addition', 'subtraction'],
     countItems: ['⭐', '🍎', '🎈', '❤️', '🌼', '🧸'],
     min: 1,
-    max: 6,
+    max: 9,
     icon: Hash,
     colors: 'from-sky-400 to-cyan-300',
     ring: 'ring-sky-200',
@@ -169,20 +172,11 @@ const pickCountingSymbol = (items, previousSymbol) => {
   return shuffle(availableItems.length > 0 ? availableItems : items)[0];
 };
 
-export const createCountingQuestion = (activity, previousQuestion) => {
-  const symbol = pickCountingSymbol(activity.countItems, previousQuestion?.symbol);
-  let answer = randomBetween(activity.min, activity.max);
-
-  if (activity.max > activity.min) {
-    while (String(answer) === String(previousQuestion?.answer)) {
-      answer = randomBetween(activity.min, activity.max);
-    }
-  }
-
-  const nearby = [answer - 1, answer + 1, answer + 2].filter(
-    (choice) => choice >= activity.min && choice <= activity.max,
+const createNumberChoices = (answer, min, max) => {
+  const nearby = [answer - 2, answer - 1, answer + 1, answer + 2].filter(
+    (choice) => choice >= min && choice <= max,
   );
-  const fallback = Array.from({ length: activity.max - activity.min + 1 }, (_, index) => activity.min + index);
+  const fallback = Array.from({ length: max - min + 1 }, (_, index) => min + index);
   const choices = shuffle([...new Set([answer, ...nearby, ...fallback])])
     .slice(0, 3)
     .map(String);
@@ -191,13 +185,86 @@ export const createCountingQuestion = (activity, previousQuestion) => {
     choices[0] = String(answer);
   }
 
+  return shuffle(choices);
+};
+
+const pickNumberMode = (modes, previousMode) => {
+  const availableModes = modes.filter((mode) => mode !== previousMode);
+  return shuffle(availableModes.length > 0 ? availableModes : modes)[0];
+};
+
+const createCountingQuestion = (activity, previousQuestion) => {
+  const symbol = pickCountingSymbol(activity.countItems, previousQuestion?.symbol);
+  let answer = randomBetween(activity.min, 6);
+
+  if (6 > activity.min) {
+    while (String(answer) === String(previousQuestion?.answer)) {
+      answer = randomBetween(activity.min, 6);
+    }
+  }
+
   return {
     question: activity.questionTemplate.replace('{symbol}', symbol),
     answer: String(answer),
-    choices: shuffle(choices),
+    choices: createNumberChoices(answer, activity.min, 6),
+    mode: 'counting',
     symbol,
     visual: Array.from({ length: answer }, () => symbol),
   };
+};
+
+const createAdditionQuestion = (activity, previousQuestion) => {
+  const symbol = pickCountingSymbol(activity.countItems, previousQuestion?.symbol);
+  const first = randomBetween(1, 5);
+  const second = randomBetween(1, Math.min(4, activity.max - first));
+  const answer = first + second;
+
+  return {
+    question: activity.additionTemplate.replace('{symbol}', symbol),
+    answer: String(answer),
+    choices: createNumberChoices(answer, activity.min, activity.max),
+    mode: 'addition',
+    symbol,
+    visualGroups: [
+      { items: Array.from({ length: first }, () => symbol) },
+      { operator: '+' },
+      { items: Array.from({ length: second }, () => symbol) },
+    ],
+  };
+};
+
+const createSubtractionQuestion = (activity, previousQuestion) => {
+  const symbol = pickCountingSymbol(activity.countItems, previousQuestion?.symbol);
+  const start = randomBetween(2, 8);
+  const removed = randomBetween(1, Math.min(4, start - 1));
+  const answer = start - removed;
+
+  return {
+    question: activity.subtractionTemplate.replace('{symbol}', symbol),
+    answer: String(answer),
+    choices: createNumberChoices(answer, activity.min, activity.max),
+    mode: 'subtraction',
+    symbol,
+    visualGroups: [
+      { items: Array.from({ length: start }, () => symbol) },
+      { operator: '-' },
+      { items: Array.from({ length: removed }, () => symbol), muted: true },
+    ],
+  };
+};
+
+export const createNumberQuestion = (activity, previousQuestion) => {
+  const mode = pickNumberMode(activity.numberModes, previousQuestion?.mode);
+
+  if (mode === 'addition') {
+    return createAdditionQuestion(activity, previousQuestion);
+  }
+
+  if (mode === 'subtraction') {
+    return createSubtractionQuestion(activity, previousQuestion);
+  }
+
+  return createCountingQuestion(activity, previousQuestion);
 };
 
 export const createLetterObjectQuestion = (activity, previousQuestion) => {
@@ -224,8 +291,8 @@ export const createLetterObjectQuestion = (activity, previousQuestion) => {
 };
 
 export const createActivityQuestion = (activity, previousQuestion) => {
-  if (activity.type === 'counting') {
-    return createCountingQuestion(activity, previousQuestion);
+  if (activity.type === 'numbers') {
+    return createNumberQuestion(activity, previousQuestion);
   }
 
   if (activity.type === 'letter-object') {
